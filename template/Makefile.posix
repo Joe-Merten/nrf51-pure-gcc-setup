@@ -21,8 +21,15 @@ clean:
 	rm -f JLink.log
 	rm -f .gdbinit
 
+ifdef FLASH_BOOTLOADER_UICR
+    # Hack to suppress the block verification error when writing the uicr
+    FLASH_BOOTLOADER_UICR_ERROR_SUPPRESSION_HACK := | grep -v "Programming failed @ address 0x10001000" | grep -v "Verification failed @ address 0x10001000" || true
+else
+    FLASH_BOOTLOADER_UICR_ERROR_SUPPRESSION_HACK :=
+endif
+
 flash: all flash.jlink
-	$(JLINK) flash.jlink
+	$(JLINK) flash.jlink $(FLASH_BOOTLOADER_UICR_ERROR_SUPPRESSION_HACK)
 
 flash.jlink: $(OUTPUT_PATH)/bootloader-uicr.bin $(OUTPUT_PATH)/sdk-bootloader-config.bin
 	@printf "r\n"                                           >$@
