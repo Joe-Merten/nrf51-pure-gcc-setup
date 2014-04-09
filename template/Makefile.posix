@@ -25,7 +25,11 @@ flash: all flash.jlink
 	$(JLINK) flash.jlink
 
 flash.jlink:
-	printf "r\nloadbin $(BIN) $(FLASH_START_ADDRESS)\nr\ng\nexit\n" > flash.jlink
+	printf "r\n"                                       > flash.jlink
+	printf "loadbin $(BIN) $(FLASH_START_ADDRESS)\n"  >> flash.jlink
+	printf "r\n"                                      >> flash.jlink
+	printf "g\n"                                      >> flash.jlink
+	printf "exit\n"                                   >> flash.jlink
 
 flash-softdevice: erase-all flash-softdevice.jlink
 ifndef SOFTDEVICE
@@ -39,7 +43,12 @@ endif
 
 flash-softdevice.jlink:
 	# Write to NVMC to enable write. Write mainpart, write UICR. Assumes device is erased.
-	printf "w4 4001e504 1\nloadbin \"$(SOFTDEVICE_OUTPUT:.hex=_mainpart.bin)\" 0\nloadbin \"$(SOFTDEVICE_OUTPUT:.hex=_uicr.bin)\" 0x10001000\nr\ng\nexit\n" > flash-softdevice.jlink
+	printf "w4 4001e504 1\n"                                                > flash-softdevice.jlink
+	printf "loadbin \"$(SOFTDEVICE_OUTPUT:.hex=_mainpart.bin)\" 0\n"       >> flash-softdevice.jlink
+	printf "loadbin \"$(SOFTDEVICE_OUTPUT:.hex=_uicr.bin)\" 0x10001000\n"  >> flash-softdevice.jlink
+	printf "r\n"                                                           >> flash-softdevice.jlink
+	printf "g\n"                                                           >> flash-softdevice.jlink
+	printf "exit\n"                                                        >> flash-softdevice.jlink
 
 recover: recover.jlink erase-all.jlink pin-reset.jlink
 	$(JLINK) recover.jlink
