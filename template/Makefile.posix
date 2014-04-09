@@ -24,12 +24,31 @@ clean:
 flash: all flash.jlink
 	$(JLINK) flash.jlink
 
-flash.jlink:
-	@printf "r\n"                                       >$@
-	@printf "loadbin $(BIN) $(FLASH_START_ADDRESS)\n"  >>$@
-	@printf "r\n"                                      >>$@
-	@printf "g\n"                                      >>$@
-	@printf "exit\n"                                   >>$@
+flash.jlink: $(OUTPUT_PATH)/bootloader-uicr.bin $(OUTPUT_PATH)/sdk-bootloader-config.bin
+	@printf "r\n"                                           >$@
+	@printf "loadbin \"$(BIN)\" $(FLASH_START_ADDRESS)\n"  >>$@
+ifneq ($(FLASH_BOOTLOADER_UICR),false)
+	@# FIXME: The bootloader's address is wrote correctly to uicr, but I always get a "Error: Programming failed @ address 0x10001000 (block verification error)"
+	@#        Even "w4 4001e504 1" won't help. Any suggestions?
+	@#printf "w4 4001e504 1\n"                                              >>$@
+	@printf "loadbin \"$(OUTPUT_PATH)/bootloader-uicr.bin\" 0x10001014\n"  >>$@
+endif
+ifneq ($(FLASH_SDK_BOOTLOADER_CONFIG),false)
+	@printf "loadbin \"$(OUTPUT_PATH)/sdk-bootloader-config.bin\" $(FLASH_SDK_BOOTLOADER_CONFIG_ADDRESS)\n"  >>$@
+endif
+	@printf "r\n"     >>$@
+	@printf "g\n"     >>$@
+	@printf "exit\n"  >>$@
+
+$(OUTPUT_PATH)/bootloader-uicr.bin:
+	@# printf "\x00\xA0\x03\x00" >$@
+	@# For flashing the bootloader's uicr entry, we need the flash address in 32 bit binary little endian format
+	@# We first convert the e.g. "0003a000" to "00 a0 03 00", so that xxd can convert that to binary
+	@printf "$(shell a="$(FLASH_START_ADDRESS)"; printf "$${a:6:2} $${a:4:2} $${a:2:2} $${a:0:2}")" | xxd -r -p >$@
+
+$(OUTPUT_PATH)/sdk-bootloader-config.bin:
+	@# TODO: Set correct values for crc16 & size, see also bootloader_settings_t
+	@printf "\x01\x00\x00\x00\x00\x00\x00\x00" >$@
 
 flash-softdevice: erase-all flash-softdevice.jlink
 ifndef SOFTDEVICE

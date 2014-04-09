@@ -85,6 +85,16 @@ OBJS_AS = $(addprefix $(OUTPUT_PATH), $(SRCS_AS:.s=.os))
 
 JLINK_OPTIONS = -device nrf51822 -if swd -speed 1000
 
+# You can FLASH_BOOTLOADER_UICR set in your project specific Makefile, if your project is a bootloader.
+# This causes the storage of the bootloader's address to UICR 10001014 so that it is called by the SoftDevice during bootup
+FLASH_BOOTLOADER_UICR ?= false
+
+# You can FLASH_BOOTLOADER_CONFIG set in your project specific Makefile, if your project is a normal application and your target system consist of a bootloader which is based on the Nordic Sdk.
+# This causes a write of some configuration data into the last flash block (typically 16 byte at 3FC00 for a 256k device) that notifies the bootloader that there is a valid application in the flash.
+FLASH_SDK_BOOTLOADER_CONFIG ?= false
+FLASH_SDK_BOOTLOADER_CONFIG_ADDRESS ?= 0x3FC00
+
+
 all: $(OBJS) $(OBJS_AS) $(HEX)
 
 rebuild: clean all
