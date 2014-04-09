@@ -27,13 +27,13 @@ flash: all flash.jlink
 flash.jlink: $(OUTPUT_PATH)/bootloader-uicr.bin $(OUTPUT_PATH)/sdk-bootloader-config.bin
 	@printf "r\n"                                           >$@
 	@printf "loadbin \"$(BIN)\" $(FLASH_START_ADDRESS)\n"  >>$@
-ifneq ($(FLASH_BOOTLOADER_UICR),false)
+ifdef FLASH_BOOTLOADER_UICR
 	@# FIXME: The bootloader's address is wrote correctly to uicr, but I always get a "Error: Programming failed @ address 0x10001000 (block verification error)"
 	@#        Even "w4 4001e504 1" won't help. Any suggestions?
 	@#printf "w4 4001e504 1\n"                                              >>$@
 	@printf "loadbin \"$(OUTPUT_PATH)/bootloader-uicr.bin\" 0x10001014\n"  >>$@
 endif
-ifneq ($(FLASH_SDK_BOOTLOADER_CONFIG),false)
+ifdef FLASH_SDK_BOOTLOADER_CONFIG
 	@printf "loadbin \"$(OUTPUT_PATH)/sdk-bootloader-config.bin\" $(FLASH_SDK_BOOTLOADER_CONFIG_ADDRESS)\n"  >>$@
 endif
 	@printf "r\n"     >>$@
